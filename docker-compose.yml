@@ -1,0 +1,46 @@
+version: '3'
+services: 
+#NGINX Service
+  nginx:
+    container_name: nginx-container
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php-fpm
+    networks:
+      - backend
+  
+#PHP-FPM Service
+  php-fpm:
+    container_name: php-container
+    build: ./php-fpm
+    volumes:
+      - ./src:/var/www
+    ports:
+      - "9000:9000"
+    networks: 
+      - backend
+    
+  mysql:
+      image: mysql:latest
+      container_name: mysql-container
+      restart: unless-stopped
+      tty: true
+      ports:  
+        - "3306:3306"
+      environment:
+        MYSQL_DATABASE: EurosongFestival
+        MYSQL_USER: homestead
+        MYSQL_PASSWORD: secret
+        MYSQL_ROOT_PASSWORD: E9216E491715B1D0B811735242E6B0DCF0A9C698
+        SERVICE_NAME: mysql
+      command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci','--default-authentication-plugin=mysql_native_password']
+      networks:
+        - backend
+
+networks: 
+  backend:
