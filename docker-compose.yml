@@ -1,7 +1,13 @@
-version: '3'
-services: 
-#NGINX Service
-  nginx:
+version: '3.7'
+services:
+#React Service
+  react:
+    container_name: react-container 
+    build: ./react
+    ports:
+      - '80:80'
+#NGINX Service Back-End
+  nginx-backend:
     container_name: nginx-container
     image: nginx:alpine
     ports:
@@ -20,11 +26,14 @@ services:
     build: ./php-fpm
     volumes:
       - ./src:/var/www
+      - ./php-fpm/www.conf:/usr/local/etc/php-fpm.d/www.conf
     ports:
       - "9000:9000"
+    depends_on:
+      - mysql
     networks: 
       - backend
-    
+#MYSQL Service    
   mysql:
       image: mysql:latest
       container_name: mysql-container
@@ -39,6 +48,11 @@ services:
         MYSQL_ROOT_PASSWORD: E9216E491715B1D0B811735242E6B0DCF0A9C698
         SERVICE_NAME: mysql
       command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci','--default-authentication-plugin=mysql_native_password']
+      healthcheck:
+        test: ["CMD-SHELL", 'mysql ping']
+        interval: 10s
+        timeout: 2s
+        retries: 10
       networks:
         - backend
 
