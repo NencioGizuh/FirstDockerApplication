@@ -6,10 +6,13 @@ services:
     build: ./react
     ports:
       - '80:80'
-#NGINX Service Back-End
-  nginx-backend:
+    environment:
+      - BASE_URL=http://localhost:8000/api/winners/
+#NGINX Service
+  nginx:
     container_name: nginx-container
     image: nginx:alpine
+    tty: true
     ports:
       - "8000:80"
     volumes:
@@ -30,13 +33,30 @@ services:
     ports:
       - "9000:9000"
     depends_on:
-      - mysql
+      - mysqlmaster
+    tty: true
+    environment:
+      APP_KEY: base64:egptnpAr3lYfETA6QSCSdaoA2Fiii9dJCPE1yjGy86Y=
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://docker.for.mac.localhost:8000/status", "&&", "curl", "-f", "http://docker.for.mac.localhost:8000/ping"]
+      interval: 30s
+      retries: 1
     networks: 
       - backend
+  
+  migration:
+    container_name: migration-container
+    build: ./migration
+    tty: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - backend
+
 #MYSQL Service    
-  mysql:
-      image: mysql:latest
-      container_name: mysql-container
+  mysqlmaster:
+      image: mariadb:latest
+      container_name: mariadb-container
       restart: unless-stopped
       tty: true
       ports:  
@@ -45,16 +65,40 @@ services:
         MYSQL_DATABASE: EurosongFestival
         MYSQL_USER: homestead
         MYSQL_PASSWORD: secret
-        MYSQL_ROOT_PASSWORD: E9216E491715B1D0B811735242E6B0DCF0A9C698
+        MYSQL_ROOT_PASSWORD: root
         SERVICE_NAME: mysql
-      command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci','--default-authentication-plugin=mysql_native_password']
-      healthcheck:
-        test: ["CMD-SHELL", 'mysql ping']
-        interval: 10s
-        timeout: 2s
-        retries: 10
+      volumes:
+        - ./database/data/mysql-master:/var/lib/mysql/
+        - ./database/config/mysql-master:/etc/mysql/conf.d/
       networks:
         - backend
+        - database
+
+  mysqlslave:
+      image: mariadb:latest
+      environment:
+        MYSQL_ROOT_PASSWORD: root
+      volumes:
+        - ./database/data/mysql-slave:/var/lib/mysql
+        - ./database/config/mysql-slave:/etc/mysql/conf.d/
+      networks:
+        - database
+      
+  mysqlconfigure:
+    image: mariadb:latest
+    environment:
+      - "MYSQL_SLAVE_PASSWORD=root"
+      - "MYSQL_MASTER_PASSWORD=root"
+      - "MYSQL_ROOT_PASSWORD=root"
+      - "MYSQL_REPLICATION_USER=repl"
+      - "MYSQL_REPLICATION_PASSWORD=repl"
+    volumes:
+      - ./database/config/mysql_connector.sh:/tmp/mysql_connector.sh
+    command: /bin/bash -x /tmp/mysql_connector.sh
+    networks:
+      - database
+
 
 networks: 
   backend:
+  database:

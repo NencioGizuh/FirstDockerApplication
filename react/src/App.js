@@ -11,7 +11,7 @@ class App extends React.Component {
     this.makeApiCall(2019);
   };
   makeApiCall = searchTerm => {
-    const BASE_URL = "http://localhost:8000/api/winners/";
+    const BASE_URL = window._env_.BASE_URL;
     axios.get(BASE_URL + searchTerm).then(res => {
       console.log(res);
       this.setState({

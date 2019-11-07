@@ -1,13 +1,13 @@
-FROM php:7.2-fpm
+FROM php:7.2-fpm-alpine
 
-RUN apt-get update && apt-get install -y \
+RUN apk update && apk add \
     zip \
     unzip \ 
     git \
-    curl
+    curl \
+    wget
 
 RUN docker-php-ext-install pdo_mysql
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-COPY wait-for-it.sh /wait-for-it.sh
-RUN chmod +x /wait-for-it.sh
+CMD ["php-fpm"]

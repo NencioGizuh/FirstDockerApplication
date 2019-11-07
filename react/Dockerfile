@@ -11,6 +11,13 @@ RUN npm install react-scripts@3.0.1 -g
 RUN npm run build
 
 FROM nginx:alpine
+RUN apk add --no-cache bash
+
+WORKDIR /usr/share/nginx/html
+COPY env.sh .
+COPY .env .
+RUN chmod +x env.sh
+
 COPY --from=build /app/build /usr/share/nginx/html
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/bin/bash", "-c", "/usr/share/nginx/html/env.sh && nginx -g \"daemon off;\""]
