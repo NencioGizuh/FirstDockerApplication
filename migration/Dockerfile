@@ -7,4 +7,4 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
-CMD dockerize -wait tcp://mariadb-master:3306 -timeout 60m docker exec -it eindopdracht_php-fpm.1.ldjm0obeyrvzo3j6uon4uum9l php /var/www/artisan migrate:fresh --seed
+CMD dockerize -wait tcp://mariadb:3306 -timeout 60m docker exec -it $(docker ps -q -f name=eindopdracht_php-fpm.1) php /var/www/artisan migrate:fresh --seed

@@ -37,10 +37,6 @@ services:
     tty: true
     environment:
       APP_KEY: base64:egptnpAr3lYfETA6QSCSdaoA2Fiii9dJCPE1yjGy86Y=
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://docker.for.mac.localhost:8000/status", "&&", "curl", "-f", "http://docker.for.mac.localhost:8000/ping"]
-      interval: 30s
-      retries: 1
     networks: 
       - backend
   
